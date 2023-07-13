@@ -92,7 +92,7 @@ public static class MonoRepository
             if (_mainRepoSolution != null)
                 return _mainRepoSolution;
 
-            _mainRepoSolution = SolutionFile.Parse(Path.Join(RootDirectory, "Plexure.sln"));
+            _mainRepoSolution = SolutionFile.Parse(Path.Join(RootDirectory, "TechTonic.sln"));
             return _mainRepoSolution;
         }
     }

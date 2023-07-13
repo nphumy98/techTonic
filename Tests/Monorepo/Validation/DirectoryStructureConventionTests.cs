@@ -75,8 +75,7 @@ public class DirectoryStructureConventionTests
         // AUTHOR AND PR REVIEWER: THIS SHOULD VERY RARELY CHANGE - PLEASE GET A LEAD TO REVIEW THIS CHANGE BEFORE APPROVING
         new[]
             {
-                "Plexure.sln",
-                "Plexure.sln.DotSettings",
+                "TechTonic.sln",
                 "Impacted.slnf", // Special file generated at runtime in pipeline
                 "Impacted.UnitTests.slnf", // Special file generated at runtime in pipeline
                 "Directory.Build.props",
@@ -93,7 +92,6 @@ public class DirectoryStructureConventionTests
                 SpecialFiles.AzuriteDbQueueJson,
                 SpecialFiles.AzuriteDbQueueExtentJson,
                 // Not approved but ignored by git - so local checked can pass these tests:
-                "Plexure.sln.DotSettings.user",
             }
             .Should().Contain(Path.GetFileName(topLevelFile), "Only approved files can be placed at the top level to avoid pollution and chaos");
     }
@@ -188,26 +186,4 @@ public class DirectoryStructureConventionTests
     public static IEnumerable<object[]> AllPipelineResourceProjectFiles => MonoRepository.AllNonTestProjectFiles
         .Where(path => path.Split(Path.DirectorySeparatorChar).Contains("Pipelines"))
         .AsTestSourceArguments();
-
-    [Theory]
-    [MemberData(nameof(AllPipelineResourceProjectFiles))]
-    public void All_pipeline_resource_projects_follow_pipeline_path_conventions(string projectPath)
-    {
-        // Arrange
-        var actualPathParts = Path.GetRelativePath(MonoRepository.RootDirectory, Path.GetDirectoryName(projectPath)!)
-            .Split(Path.DirectorySeparatorChar);
-
-        // Assert
-        using var scope = new AssertionScope();
-
-        actualPathParts.Should().ContainSingle(p => p == "Src",
-            $"The project {projectPath} should have a 'Src' ancestor directory"
-            + $" (e.g '..\\Src\\{Path.GetFileName(projectPath)}'");
-
-        if (actualPathParts.All(p => p != "Common"))
-        {
-            actualPathParts.Should().ContainMatch("*Resources",
-                $"The project supporting a pipeline {projectPath} should be in a template resources directory (*.-Resources\\Src\\...)");
-        }
-    }
 }

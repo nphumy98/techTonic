@@ -27,14 +27,14 @@ public class CsProjectConventionTests
 
     [Theory]
     [MemberData(nameof(AllProjectFiles))]
-    public void All_project_files_should_exclude_plexure_prefix(string csProjectFile)
+    public void All_project_files_should_exclude_techtonic_prefix(string csProjectFile)
     {
         // Arrange
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(csProjectFile);
 
         // Assert
-        fileNameWithoutExtension.Should().NotStartWith("Plexure",
-            $"Cs Project File {fileNameWithoutExtension} in {csProjectFile} should not start with the redundant 'Plexure' prefix in the monorepo to keep paths small");
+        fileNameWithoutExtension.Should().NotStartWith("TechTonic",
+            $"Cs Project File {fileNameWithoutExtension} in {csProjectFile} should not start with the redundant 'TechTonic' prefix in the monorepo to keep paths small");
     }
 
     [Theory]
@@ -50,7 +50,7 @@ public class CsProjectConventionTests
 
     [Theory]
     [MemberData(nameof(AllProjectFiles))]
-    public void All_project_namespaces_match_filename_with_plexure_prefix(string csProjectFile)
+    public void All_project_namespaces_match_filename_with_techtonic_prefix(string csProjectFile)
     {
         // Arrange
         var project = ProjectRootElement.Open(csProjectFile)!;
@@ -59,19 +59,19 @@ public class CsProjectConventionTests
         // Act
         var rootNamespaceProperty = project.Properties.SingleOrDefault(property => property.Name == "RootNamespace")?.Value;
         if (rootNamespaceProperty == null)
-            return; // Default namespaces already guaranteed to have the plexure prefix via common Directory.Build.props
+            return; // Default namespaces already guaranteed to have the techtonic prefix via common Directory.Build.props
 
         // Assert
-        var expected = "Plexure." + Path.GetFileNameWithoutExtension(csProjectFile);
+        var expected = "TechTonic." + Path.GetFileNameWithoutExtension(csProjectFile);
 
         rootNamespaceProperty.Should()
             .Be(expected,
-            $"The project {csProjectFile} should follow namespace conventions prefixed with Plexure. in the monorepo");
+            $"The project {csProjectFile} should follow namespace conventions prefixed with TechTonic. in the monorepo");
     }
 
     [Theory]
     [MemberData(nameof(AllProjectFiles))]
-    public void All_project_assemblies_match_filename_with_plexure_prefix(string csProjectFile)
+    public void All_project_assemblies_match_filename_with_techtonic_prefix(string csProjectFile)
     {
         // Arrange
         var project = ProjectRootElement.Open(csProjectFile)!;
@@ -80,13 +80,13 @@ public class CsProjectConventionTests
         // Act
         var assemblyProperty = project.Properties.SingleOrDefault(property => property.Name == "AssemblyName")?.Value;
         if (assemblyProperty == null)
-            return; // Assembly already guaranteed to have the plexure prefix via common Directory.Build.props
+            return; // Assembly already guaranteed to have the TechTonic prefix via common Directory.Build.props
 
         // Assert
-        var expected = "Plexure." + Path.GetFileNameWithoutExtension(csProjectFile);
+        var expected = "TechTonic." + Path.GetFileNameWithoutExtension(csProjectFile);
 
         assemblyProperty.Should().Be(expected,
-            $"The project {csProjectFile} should follow assembly name conventions prefixed with Plexure. in the monorepo");
+            $"The project {csProjectFile} should follow assembly name conventions prefixed with TechTonic. in the monorepo");
     }
 
     [Theory]
@@ -98,7 +98,7 @@ public class CsProjectConventionTests
 
         // Assert
         maybeFound.Should().NotBeNull(
-            $"The project {csProjectFile} should be referenced in the main Plexure.sln file");
+            $"The project {csProjectFile} should be referenced in the main TechTonic.sln file");
     }
 
     [Theory]
