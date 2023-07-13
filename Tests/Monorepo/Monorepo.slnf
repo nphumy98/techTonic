@@ -1,0 +1,11 @@
+{
+  "solution": {
+    "path": "..\\..\\Plexure.sln",
+    "projects": [
+      "Monorepo\\DocSync\\Src\\Monorepo.DocSync.csproj",
+      "Pipelines\\Common\\Src\\Pipelines.Common.csproj",
+      "Pipelines\\StepTemplates\\ChangeImpactAnalysisResources\\Src\\ChangeImpact.Analyzer.csproj",
+      "Tests\\Monorepo\\Validation\\Monorepo.Validation.UnitTests.csproj"
+    ]
+  }
+}

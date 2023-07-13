@@ -1,0 +1,112 @@
+###############################################################################
+# Publish Documentation Pipeline
+###############################################################################
+#
+# This will download all the artifacts (as provided via 'artifacts' parameter) from plexure-documentation feed 
+# Checkouts 'api-documentation-portal' repo from GitHub, creates a branch and pulls down existing changes in that branch
+# *.json files from the artifacts are then placed into (or replaced) openapi/{artifact} folder and pushed to GitHub
+#
+# Set 'debug' to true to run 'Peek Folder Structure' tasks and see folder structures
+#
+###############################################################################
+
+trigger: none
+
+parameters:
+  - name: branch
+    type: string
+    default: develop
+  - name: artifacts
+    type: object
+    default:
+      - int-dev-core-authorization
+  - name: debug
+    displayName: Debug
+    type: boolean
+    default: false
+  
+resources:
+  repositories:
+  - repository: api.documentation.portal Sources
+    type: github
+    endpoint: GitHub Documentation Connection
+    name: documentation-at-plexure/api.documentation.portal
+
+pool:
+  vmImage: windows-latest
+
+stages:
+- stage: DownloadFromFeedAndPublish
+  displayName: Download OAS files from a Feed and Publish to Github
+
+  jobs:
+  - job: DownloadFromFeedAndPublish
+    displayName: DownloadFromFeedAndPublish
+
+    steps:   
+      - checkout: api.documentation.portal Sources
+        persistCredentials: true
+        path: 's/api-documentation-portal'
+        clean: true
+          
+      # Checkout the branch specifed, checks whether the branch exists on remote and if so tracks it and pull the changes down
+      - bash: |
+          git config user.email "download-from-azure-feed@plexure.com"
+          git config user.name "Publish Documentation Azure Pipeline"
+          git checkout -b ${{ parameters.branch }} origin/main
+          git branch -r
+          branch_exists_on_remote=$(git branch -r | grep "origin/${{ parameters.branch }}" | wc -l)
+          echo NOTE: branch_exists_on_remote: $branch_exists_on_remote, if 1 then pull the changes as branch already on remote
+          if [ $branch_exists_on_remote -eq 1 ]; then
+            git branch -u origin/${{ parameters.branch }}
+            git pull
+          fi
+        displayName: "Checkout ${{ parameters.branch }}"
+      
+      - ${{ each artifact in parameters.artifacts }}:
+        - task: DownloadPackage@1
+          displayName: ${{ artifact }}
+          inputs:
+            packageType: upack
+            feed: plexure-documentation
+            definition: ${{ artifact }}
+            version: '*'                                                                            # '*' means download the latest version of the artifact
+            downloadPath: $(System.ArtifactsDirectory)/plexure-documentation/${{ artifact }}
+        
+        - ${{ if eq(parameters.debug, true) }}:
+          - task: CmdLine@2
+            displayName: Peek Folder Structure
+            inputs:
+              script: 'tree $(Agent.WorkFolder)\1 /f'  
+            
+        - task: CopyFiles@2
+          displayName: Copy OAS to the repo
+          inputs:
+            sourceFolder: $(System.ArtifactsDirectory)/plexure-documentation/${{ artifact }}
+            contents: '**.json'
+            targetFolder: $(Build.SourcesDirectory)/openapi/${{ artifact }}
+            overWrite: true
+            
+        - bash: |
+            git add .
+            git status
+            no_changes=$(git status | grep "nothing to commit, working tree clean" | wc -l)
+            if [ $no_changes -eq 1 ]; then
+              echo "No changes detected. The OAS file downloaded from feed is the same as what's already in the ${{ parameters.branch }} branch"
+            else
+              git commit -m "Added OAS for ${{ artifact }}"    
+            fi
+          displayName: Check for changes and Add files
+      
+        - ${{ if eq(parameters.debug, true) }}:
+          - task: CmdLine@2
+            displayName: Peek Folder Structure
+            inputs:
+              script: 'tree $(Agent.WorkFolder)\1 /f'
+            
+      - bash: |
+          git status
+          git push origin ${{ parameters.branch }}
+        displayName: Push the files      
+        
+    

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <Company>TechTonic</Company>
+    <Copyright>Copyright © $(Company) $([System.DateTime]::Now.Year)</Copyright>
+    <RootNamespace>TechTonic.$(MSBuildProjectName)</RootNamespace>
+    <AssemblyName>TechTonic.$(MSBuildProjectName)</AssemblyName>
+    <IsBuildAgent Condition=" '$(AGENT_MACHINENAME)' != '' ">true</IsBuildAgent>
+  </PropertyGroup>
+</Project>

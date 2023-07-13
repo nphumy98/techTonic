@@ -1,0 +1,204 @@
+trigger: none
+
+variables:
+- name: ImpactedSolutionFilter
+  value: $(Build.SourcesDirectory)/ImpactedSolutionFilter/Impacted.slnf
+- name: disable.coverage.autogenerate
+  value: 'true'
+- name: globalLineCoverageThresholdSetting
+  value: '0'
+- name: globalBranchCoverageThresholdSetting
+  value: '0'
+- template: Variables/common.yml
+
+pool:
+  vmImage: $(vmImage)
+
+stages:
+- stage: BuildAndTest
+  jobs:
+
+  ########################################################################
+  # Validate Repo Content Job
+  ########################################################################
+  - job: RepoValidation
+    displayName: Validate Repo Contents
+    steps:
+
+    - task: DotNetCoreCLI@2
+      displayName: Restore
+      inputs:
+        command: 'restore'
+        projects: '**/Monorepo.Validation.UnitTests.csproj'
+        feedsToUse: config
+        nugetConfigPath: 'nuget.config'
+
+    - task: DotNetCoreCLI@2
+      displayName: Run Monorepo Validation Unit Tests
+      inputs:
+        command: 'test'
+        projects: '**/Monorepo.Validation.UnitTests.csproj'
+
+
+  ########################################################################
+  # Run Impacted Analysis
+  ########################################################################
+  - job: ImpactedProjects
+    displayName: Run Impacted Analysis
+    steps:
+
+    - template: StepTemplates/change-impact-analysis.yml
+      parameters:
+        impactedSolutionFilterOutputPath: $(ImpactedSolutionFilter)
+
+    - task: CopyFiles@2
+      displayName: Copy Impacted Solution Filter File
+      inputs:
+        contents: $(ImpactedSolutionFilter)
+        targetFolder: $(Build.ArtifactStagingDirectory)
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      displayName: Publish Impacted Solution Filter File
+      artifact: ImpactedSolutionFilter
+
+  ########################################################################
+  # Run Impacted Quality Checks Job
+  ########################################################################
+  - job: ImpactedQualityChecks
+    dependsOn: ImpactedProjects
+    condition: eq(dependencies.ImpactedProjects.outputs['ImpactAnalysis.HasImpactedAnyProjects'], 'True')
+    displayName: Run Impacted Quality Checks
+    steps:
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'current'
+        artifact: ImpactedSolutionFilter
+        path: '$(Build.SourcesDirectory)'
+
+    - template: ${{variables['System.DefaultWorkingDirectory']}}/Pipelines/JTemplates/Restore/restore.yml
+      parameters:
+        projOrSln: $(ImpactedSolutionFilter)
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Compile and Analyze'
+      inputs:
+        command: 'build'
+        projects: $(ImpactedSolutionFilter)
+
+    - task: BuildQualityChecks@8
+      inputs:
+        checkWarnings: true
+        warningFailOption: 'fixed'
+        warningThreshold: '0'
+        showStatistics: true
+
+  ########################################################################
+  # Run Impacted Tests Job
+  ########################################################################
+  - job: ImpactedTests
+    dependsOn: ImpactedProjects
+    condition: eq(dependencies.ImpactedProjects.outputs['ImpactAnalysis.HasImpactedUnitTestProjects'], 'True')
+    displayName: 'Run Impacted Unit Tests'
+    steps:
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'current'
+        artifact: ImpactedSolutionFilter
+        path: '$(Build.SourcesDirectory)'
+
+    - template: ${{variables['System.DefaultWorkingDirectory']}}/Pipelines/JTemplates/Restore/restore.yml
+      parameters:
+        projOrSln: $(ImpactedSolutionFilter)
+
+    # TODO: How can we run parallel? google it... xunit has parallel
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Impacted Unit Tests'
+      inputs:
+        command: 'test'
+        projects: $(ImpactedSolutionFilter)
+        arguments: '--collect:"XPlat Code Coverage" /p:CoverletOutputFormat=cobertura --filter "FullyQualifiedName~UnitTest"'
+
+    - template: StepTemplates/CodeCoverage/upload-code-coverage-results.yml
+      parameters: 
+        artifactName: UnitTestsCodeCoverages
+
+  ########################################################################
+  # Run SAST Scan Job
+  ########################################################################
+  - job: SASTScanning
+    dependsOn: ImpactedProjects
+    condition: eq(dependencies.ImpactedProjects.outputs['ImpactAnalysis.HasImpactedAnyProjects'], 'True')
+    displayName: Run Static Application Security Testing
+
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'current'
+        artifact: ImpactedSolutionFilter
+        path: '$(Build.SourcesDirectory)'
+
+    - template: StepTemplates/SecurityTesting/sast-scanning.yml
+      parameters:
+        projOrSln: $(ImpactedSolutionFilter)
+        sonarCloudOrg: $(sonarCloudOrg)
+        sonarCloudProjectKey: $(sonarCloudProjectKey)
+        sonarCloudProjectName: $(sonarCloudProjectName)
+
+  ########################################################################
+  # Run SCA Scan Job
+  ########################################################################
+  - job: SCAScan
+    dependsOn: ImpactedProjects
+    condition: eq(dependencies.ImpactedProjects.outputs['ImpactAnalysis.HasImpactedUnitTestProjects'], 'True')
+    displayName: 'Run SCA Scan'
+    steps:
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'current'
+        artifact: ImpactedSolutionFilter
+        path: '$(Build.SourcesDirectory)'
+
+    - template: JTemplates/Restore/restore.yml
+      parameters:
+        projOrSln: $(ImpactedSolutionFilter)
+
+    - template: StepTemplates/SecurityTesting/sca-analyse.yml
+      parameters:
+        projOrSln: $(ImpactedSolutionFilter)
+        outpath: Build
+        workingDirectory: ${{variables['System.DefaultWorkingDirectory']}}
+        addlArguments: $(dependencyScanningOptions)
+
+    - task: CopyFiles@2
+      displayName: Copy bom.json
+      inputs:
+        contents: Build/bom.json
+        targetFolder: $(Build.ArtifactStagingDirectory)
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      displayName: Publish Bill of Materials
+      artifact: bom.json
+
+  ########################################################################
+  # Run Custom Pre-Merge checks
+  ########################################################################
+  - template: JobTemplates/premerge-check-hooks.yml
+
+- stage: CodeCoverage
+  jobs:
+
+  ########################################################################
+  # Publish Code Coverage Report Job
+  ########################################################################
+  - job : PublishCodeCoverageReport
+    displayName: 'Publish Code Coverage Report'
+    condition: eq(stageDependencies.BuildAndTest.ImpactedProjects.outputs['ImpactAnalysis.HasImpactedUnitTestProjects'], 'True')
+    steps:
+
+    - template: StepTemplates/CodeCoverage/code-coverage-checks.yml
+      parameters:
+        checkThresholds: true
+        solutionFilter: 'Impacted.slnf'

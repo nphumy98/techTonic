@@ -1,0 +1,71 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{0233804E-7E00-46B5-954A-CA601C518743}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Auth", "Auth", "{3148DE4F-ACE9-471A-A759-CABB509E9710}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Auth.Examples.WebApi", "Components\Auth\Examples\WebApi\Src\Auth.Examples.WebApi.csproj", "{67B295E3-0290-4FC2-B941-944B936A364E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monorepo", "Monorepo", "{5551365C-A3E6-4392-8A51-285D07FEB204}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Validation", "Validation", "{8F8E2F81-A3D2-4EE0-9782-558F3DAA902D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Monorepo.Validation.UnitTests", "Tests\Monorepo\Validation\Monorepo.Validation.UnitTests.csproj", "{E836A41A-275B-46F1-9656-B5FA1797DE88}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{434A67B0-DECF-4397-832E-A169261FBFD0}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Directory.Packages.props = Directory.Packages.props
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{963DD493-4015-480C-9788-8B724387E205}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Common.props = Build\Common.props
+		Build\README.md = Build\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared Project", "Shared Project", "{6FD89175-D50B-437C-A4AA-78DB25576613}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SharedProject", "Components\SharedProject\Src\SharedProject.shproj", "{387E033A-6B6D-4DA2-A570-AC08B977A103}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67B295E3-0290-4FC2-B941-944B936A364E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67B295E3-0290-4FC2-B941-944B936A364E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67B295E3-0290-4FC2-B941-944B936A364E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67B295E3-0290-4FC2-B941-944B936A364E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E836A41A-275B-46F1-9656-B5FA1797DE88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E836A41A-275B-46F1-9656-B5FA1797DE88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E836A41A-275B-46F1-9656-B5FA1797DE88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E836A41A-275B-46F1-9656-B5FA1797DE88}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3148DE4F-ACE9-471A-A759-CABB509E9710} = {0233804E-7E00-46B5-954A-CA601C518743}
+		{67B295E3-0290-4FC2-B941-944B936A364E} = {3148DE4F-ACE9-471A-A759-CABB509E9710}
+		{8F8E2F81-A3D2-4EE0-9782-558F3DAA902D} = {5551365C-A3E6-4392-8A51-285D07FEB204}
+		{E836A41A-275B-46F1-9656-B5FA1797DE88} = {8F8E2F81-A3D2-4EE0-9782-558F3DAA902D}
+		{963DD493-4015-480C-9788-8B724387E205} = {434A67B0-DECF-4397-832E-A169261FBFD0}
+		{6FD89175-D50B-437C-A4AA-78DB25576613} = {0233804E-7E00-46B5-954A-CA601C518743}
+		{387E033A-6B6D-4DA2-A570-AC08B977A103} = {6FD89175-D50B-437C-A4AA-78DB25576613}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {43DD699D-75C1-493E-AA37-6A09A18F4A5D}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		Components\SharedProject\Src\SharedProject.projitems*{387e033a-6b6d-4da2-a570-ac08b977a103}*SharedItemsImports = 13
+		Components\SharedProject\Src\SharedProject.projitems*{e836a41a-275b-46f1-9656-b5fa1797de88}*SharedItemsImports = 5
+	EndGlobalSection
+EndGlobal
